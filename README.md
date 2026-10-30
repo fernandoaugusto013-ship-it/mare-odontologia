@@ -9,6 +9,13 @@ Site estático de demonstração para validação com a cliente. HTML, CSS e Jav
 - `app.js`: interações (tela de abertura, vídeo controlado pelo mouse, antes e depois, agendamento de demonstração, perguntas frequentes, aviso de cookies)
 - `assets/`: vídeo do banner, capa do vídeo e fotos do antes e depois
 
+## Áreas do sistema (protótipo)
+
+- `paciente/`: Área do Paciente. Entrada por CPF + código no WhatsApp, próxima consulta com confirmação, remarcação, plano de tratamento com aprovação e assinatura, Pix, documentos, ficha de saúde e assistente com IA.
+- `admin/`: Área do Admin (OdontoFlow). Painel com alertas da IA, agenda por dentista com risco de falta, pacientes com odontograma por face e evolução com ditado, funil de orçamentos, financeiro, WhatsApp com assistente e configurações (permissões, auditoria, LGPD). Troque o perfil (Gestor, Dentista, Recepção) no topo para ver as permissões.
+
+Os dados são fictícios e ficam só no navegador (localStorage). Nada é enviado.
+
 ## Rodar localmente
 
 Abra `index.html` no navegador, ou sirva a pasta:
