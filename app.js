@@ -4,7 +4,6 @@
 
   var mq = function (q) { try { return window.matchMedia(q).matches; } catch (e) { return false; } };
   var reduce = mq('(prefers-reduced-motion: reduce)');
-  var touch = mq('(hover: none)');
   var $ = function (id) { return document.getElementById(id); };
   var store = {
     get: function (k) { try { return window.sessionStorage.getItem(k); } catch (e) { return null; } },
@@ -35,48 +34,34 @@
   window.addEventListener('scroll', onScroll, { passive: true });
   onScroll();
 
-  /* ---------- Banner: vídeo controlado pelo mouse + profundidade 3D ---------- */
-  var vid = $('heroVid');
-  if (hero && vid) {
+  /* ---------- Banner: vídeo em câmera lenta, em loop, sem depender do mouse ---------- */
+  var vid = $('heroVid'), vToggle = $('vidToggle');
+  if (vid) {
     vid.muted = true;
-    var cur = 0, target = 0, raf = null, raf2 = null;
-    var tick = function () {
-      if (!vid.duration) { raf2 = requestAnimationFrame(tick); return; }
-      cur += (target - cur) * 0.12;
-      if (Math.abs(target - cur) < 0.0015) cur = target;
-      var applied = false;
-      if (!vid.seeking) {
-        var t = cur * (vid.duration - 0.05);
-        if (Math.abs(vid.currentTime - t) > 0.02) vid.currentTime = t;
-        applied = true;
-      }
-      raf2 = (cur !== target || !applied) ? requestAnimationFrame(tick) : null;
+    var RATE = 0.75;
+    var play = function () { vid.playbackRate = RATE; var p = vid.play(); if (p && p.catch) p.catch(function () {}); };
+    var setPaused = function (paused) {
+      if (!vToggle) return;
+      vToggle.setAttribute('aria-pressed', paused ? 'true' : 'false');
+      vToggle.setAttribute('aria-label', paused ? 'Retomar vídeo do banner' : 'Pausar vídeo do banner');
     };
+    vid.addEventListener('loadedmetadata', function () { vid.playbackRate = RATE; });
+    vid.addEventListener('play', function () { vid.playbackRate = RATE; setPaused(false); });
+    vid.addEventListener('pause', function () { setPaused(true); });
     if (reduce) {
-      var toEnd = function () { try { vid.currentTime = vid.duration - 0.05; } catch (e) {} };
-      if (vid.readyState >= 1) toEnd(); else vid.addEventListener('loadedmetadata', toEnd);
-    } else if (touch) {
-      setTimeout(function () { var p = vid.play(); if (p && p.catch) p.catch(function () {}); }, splash && !splash.hidden ? 1600 : 400);
+      vid.removeAttribute('autoplay'); vid.pause(); setPaused(true);
     } else {
-      hero.addEventListener('mousemove', function (e) {
-        var r = hero.getBoundingClientRect();
-        var fx = (e.clientX - r.left) / r.width;
-        var x = (fx - 0.5) * 2, y = ((e.clientY - r.top) / r.height - 0.5) * 2;
-        target = Math.max(0, Math.min(1, (fx - 0.1) / 0.7));
-        if (!raf2) raf2 = requestAnimationFrame(tick);
-        hero.classList.add('moved');
-        if (raf) cancelAnimationFrame(raf);
-        raf = requestAnimationFrame(function () {
-          hero.style.setProperty('--mx', x.toFixed(3));
-          hero.style.setProperty('--my', y.toFixed(3));
-        });
-      });
-      hero.addEventListener('mouseleave', function () {
-        if (raf) cancelAnimationFrame(raf);
-        hero.style.setProperty('--mx', '0');
-        hero.style.setProperty('--my', '0');
-      });
+      play();
+      if ('IntersectionObserver' in window) {
+        new IntersectionObserver(function (en) {
+          if (vToggle && vToggle.getAttribute('aria-pressed') === 'true' && vid.dataset.user === '1') return;
+          if (en[0].isIntersecting) play(); else vid.pause();
+        }).observe(vid);
+      }
     }
+    if (vToggle) vToggle.addEventListener('click', function () {
+      if (vid.paused) { vid.dataset.user = '0'; play(); } else { vid.dataset.user = '1'; vid.pause(); }
+    });
   }
 
   /* ---------- Antes e depois ---------- */
